@@ -21,12 +21,12 @@ export class FcmNotificationProvider
         this.configService.get<string>('FIREBASE_SERVICE_ACCOUNT_JSON'),
       );
       admin.initializeApp({
-        credential: serviceAccount,
+        credential: admin.credential.cert(serviceAccount),
       });
     }
   }
 
-  async sent(to: string, message: string): Promise<void> {
+  async send(to: string, message: string): Promise<void> {
     try {
       await admin.messaging().send({
         token: to,

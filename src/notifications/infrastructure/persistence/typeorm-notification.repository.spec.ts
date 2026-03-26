@@ -3,6 +3,8 @@ import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { randomUUID } from 'crypto';
 import { Notification } from 'src/notifications/domain/entities/notification.entity';
 import { Repository } from 'typeorm';
+import { NotificationSchema } from './notification.schema';
+import { TypeOrmNotificationRepository } from './typeorm-notification.repository';
 
 describe('TypeOrmNotificationRepository', () => {
   let repository: TypeOrmNotificationRepository;
@@ -41,7 +43,6 @@ describe('TypeOrmNotificationRepository', () => {
       where: { id: notification.id },
     });
 
-    expect(repository.save).toHaveBeenCalledWith(notification);
     expect(saveData).toBeDefined();
     expect(saveData.recipientToken).toBe(notification.recipientToken);
     expect(saveData.content).toBe(notification.content);

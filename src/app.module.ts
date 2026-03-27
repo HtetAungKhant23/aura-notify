@@ -5,6 +5,7 @@ import { NotificationModule } from './notifications/notification.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { NotificationSchema } from './notifications/infrastructure/persistence/notification.schema';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -21,6 +22,16 @@ import { NotificationSchema } from './notifications/infrastructure/persistence/n
         database: config.get<string>('DB_NAME'),
         entities: [NotificationSchema],
         synchronize: true,
+      }),
+    }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        connection: {
+          host: config.get<string>('REDIS_HOST'),
+          port: config.get<number>('REDIS_PORT'),
+        },
       }),
     }),
     NotificationModule,

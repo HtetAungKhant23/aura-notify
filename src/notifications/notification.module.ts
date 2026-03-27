@@ -9,9 +9,10 @@ import { NotificationSchema } from './infrastructure/persistence/notification.sc
 import { NotificationService } from './applications/services/notification.service';
 import { NotificationController } from './interfaces/controllers/notification.controller';
 import { FcmNotificationProvider } from './infrastructure/providers/fcm.provider';
+import { CqrsModule } from '@nestjs/cqrs';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([NotificationSchema])],
+  imports: [CqrsModule, TypeOrmModule.forFeature([NotificationSchema])],
   controllers: [NotificationController],
   providers: [
     NotificationService,

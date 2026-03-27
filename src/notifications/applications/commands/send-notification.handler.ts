@@ -1,22 +1,20 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Inject, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Inject, Logger } from '@nestjs/common';
 import { SendNotificationCommand } from './send-notification.command';
-import {
-  NOTIFICATION_PROVIDER_INTERFACE,
-  NOTIFICATION_REPOSITORY_INTERFACE,
-} from 'src/notifications/domain/interfaces/service.token';
-import { INotificationProvider } from 'src/notifications/domain/interfaces/notification-provider.interface';
+import { NOTIFICATION_REPOSITORY_INTERFACE } from 'src/notifications/domain/interfaces/service.token';
 import { INotificationRepository } from 'src/notifications/domain/interfaces/notification-repository.interface';
 import { Notification } from 'src/notifications/domain/entities/notification.entity';
 import { randomUUID } from 'crypto';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { NOTIFICATION_QUEUE } from 'src/notifications/notification.constant';
 
 @CommandHandler(SendNotificationCommand)
 export class SendNotificationHandler implements ICommandHandler<SendNotificationCommand> {
   private readonly logger = new Logger(SendNotificationHandler.name);
 
   constructor(
-    @Inject(NOTIFICATION_PROVIDER_INTERFACE)
-    private readonly provider: INotificationProvider,
+    @InjectQueue(NOTIFICATION_QUEUE) private readonly queue: Queue,
     @Inject(NOTIFICATION_REPOSITORY_INTERFACE)
     private readonly repository: INotificationRepository,
   ) {}
@@ -28,20 +26,18 @@ export class SendNotificationHandler implements ICommandHandler<SendNotification
       command.message,
     );
 
-    try {
-      await this.provider.send(
-        notification.recipientToken,
-        notification.content,
-      );
-      notification.markAsSent();
-      await this.repository.save(notification);
-    } catch (err) {
-      notification.markAsFailed();
-      await this.repository.save(notification);
-      this.logger.error(err);
-      throw new InternalServerErrorException(
-        `Failed to send notification: ${err?.message}`,
-      );
-    }
+    await this.repository.save(notification);
+    this.queue.add(
+      'send-notification',
+      {
+        notificationId: notification.id,
+        recipientToken: notification.recipientToken,
+        message: notification.content,
+      },
+      {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 1000 },
+      },
+    );
   }
 }

@@ -37,4 +37,23 @@ describe('NotificationProcessor', () => {
       'this is integration testing for BullMQ Consumer',
     );
   });
+
+  it('should throw an error if provider failed', async () => {
+    mockProvider.send.mockRejectedValue(new Error('Firebase Down'));
+
+    const mockJob = {
+      name: 'send-notification',
+      data: {
+        notificationId: 'abc',
+        recipientToken: 'user-123',
+        message: 'this is integration testing for BullMQ Consumer',
+      },
+    } as Job<NotificationJobDto>;
+
+    await expect(processor.process(mockJob)).rejects.toThrow('Firebase Down');
+    expect(mockProvider.send).toHaveBeenCalledWith(
+      'user-123',
+      'this is integration testing for BullMQ Consumer',
+    );
+  });
 });

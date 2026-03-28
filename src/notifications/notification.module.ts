@@ -12,6 +12,7 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { SendNotificationHandler } from './applications/commands/send-notification.handler';
 import { BullModule } from '@nestjs/bullmq';
 import { NOTIFICATION_QUEUE } from './notification.constant';
+import { NotificationProcessor } from './infrastructure/processors/notification.processor';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { NOTIFICATION_QUEUE } from './notification.constant';
   controllers: [NotificationController],
   providers: [
     SendNotificationHandler,
+    NotificationProcessor,
     {
       provide: NOTIFICATION_REPOSITORY_INTERFACE,
       useClass: TypeOrmNotificationRepository,

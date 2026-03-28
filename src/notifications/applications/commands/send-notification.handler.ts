@@ -30,17 +30,10 @@ export class SendNotificationHandler implements ICommandHandler<SendNotification
     );
 
     await this.repository.save(notification);
-    this.queue.add(
-      'send-notification',
-      {
-        notificationId: notification.id,
-        recipientToken: notification.recipientToken,
-        message: notification.content,
-      },
-      {
-        attempts: 3,
-        backoff: { type: 'exponential', delay: 1000 },
-      },
-    );
+    this.queue.add('send-notification', {
+      notificationId: notification.id,
+      recipientToken: notification.recipientToken,
+      message: notification.content,
+    });
   }
 }

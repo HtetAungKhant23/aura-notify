@@ -49,7 +49,6 @@ describe('SendNotificationHandler', () => {
         recipientToken: to,
         message,
       }),
-      expect.any(Object),
     );
   });
 });

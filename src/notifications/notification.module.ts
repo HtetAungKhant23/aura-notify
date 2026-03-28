@@ -17,7 +17,13 @@ import { NotificationProcessor } from './infrastructure/processors/notification.
 @Module({
   imports: [
     CqrsModule,
-    BullModule.registerQueue({ name: NOTIFICATION_QUEUE }),
+    BullModule.registerQueue({
+      name: NOTIFICATION_QUEUE,
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 1000 },
+      },
+    }),
     TypeOrmModule.forFeature([NotificationSchema]),
   ],
   controllers: [NotificationController],

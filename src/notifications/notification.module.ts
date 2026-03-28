@@ -13,6 +13,7 @@ import { SendNotificationHandler } from './applications/commands/send-notificati
 import { BullModule } from '@nestjs/bullmq';
 import { NOTIFICATION_QUEUE } from './notification.constant';
 import { NotificationProcessor } from './infrastructure/processors/notification.processor';
+import { NotificationSentEventHandler } from './applications/events/notification-sent-event.handler';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { NotificationProcessor } from './infrastructure/processors/notification.
   providers: [
     SendNotificationHandler,
     NotificationProcessor,
+    NotificationSentEventHandler,
     {
       provide: NOTIFICATION_REPOSITORY_INTERFACE,
       useClass: TypeOrmNotificationRepository,

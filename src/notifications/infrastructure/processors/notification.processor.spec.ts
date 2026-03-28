@@ -6,11 +6,14 @@ import {
 } from 'src/notifications/domain/interfaces/service.token';
 import { NotificationProcessor } from './notification.processor';
 import { NotificationJobDto } from './dtos/notification-job.dto';
+import { EventBus } from '@nestjs/cqrs';
+import { NotificationSentEvent } from 'src/notifications/domain/events/notification-sent.event';
 
 describe('NotificationProcessor', () => {
   let processor: NotificationProcessor;
   let mockProvider: any;
   let mockRepository: any;
+  let mockEventBus: any;
 
   beforeEach(async () => {
     mockProvider = { send: jest.fn().mockResolvedValue(undefined) };
@@ -18,6 +21,7 @@ describe('NotificationProcessor', () => {
       save: jest.fn().mockResolvedValue(undefined),
       findById: jest.fn(),
     };
+    mockEventBus = { publish: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -27,6 +31,7 @@ describe('NotificationProcessor', () => {
           provide: NOTIFICATION_REPOSITORY_INTERFACE,
           useValue: mockRepository,
         },
+        { provide: EventBus, useValue: mockEventBus },
       ],
     }).compile();
 
@@ -38,9 +43,6 @@ describe('NotificationProcessor', () => {
   });
 
   it('should send notification via FCM', async () => {
-    const mockNotification = { id: 'abc', markAsSent: jest.fn() };
-    mockRepository.findById.mockResolvedValue(mockNotification);
-
     const mockJob = {
       name: 'send-notification',
       data: {
@@ -55,9 +57,9 @@ describe('NotificationProcessor', () => {
       'user-123',
       'this is integration testing for BullMQ Consumer',
     );
-    expect(mockRepository.findById).toHaveBeenCalledWith(mockNotification.id);
-    expect(mockNotification.markAsSent).toHaveBeenCalled();
-    expect(mockRepository.save).toHaveBeenCalledWith(mockNotification);
+    expect(mockEventBus.publish).toHaveBeenCalledWith(
+      new NotificationSentEvent('abc'),
+    );
   });
 
   it('should throw an error if provider failed', async () => {

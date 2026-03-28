@@ -9,6 +9,8 @@ import {
 import { NOTIFICATION_QUEUE } from 'src/notifications/notification.constant';
 import { NotificationJobDto } from './dtos/notification-job.dto';
 import { INotificationRepository } from 'src/notifications/domain/interfaces/notification-repository.interface';
+import { EventBus } from '@nestjs/cqrs';
+import { NotificationSentEvent } from 'src/notifications/domain/events/notification-sent.event';
 
 @Injectable()
 @Processor(NOTIFICATION_QUEUE)
@@ -21,6 +23,8 @@ export class NotificationProcessor extends WorkerHost {
 
     @Inject(NOTIFICATION_REPOSITORY_INTERFACE)
     private readonly repository: INotificationRepository,
+
+    private readonly eventBus: EventBus,
   ) {
     super();
   }
@@ -34,11 +38,7 @@ export class NotificationProcessor extends WorkerHost {
       );
 
       await this.provider.send(recipientToken, message);
-      const notification = await this.repository.findById(notificationId);
-      if (notification) {
-        notification.markAsSent();
-        await this.repository.save(notification);
-      }
+      this.eventBus.publish(new NotificationSentEvent(notificationId));
 
       this.logger.log(`Notification ${notificationId} successfully delivered.`);
     } catch (err) {

@@ -2,9 +2,13 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { INotificationProvider } from 'src/notifications/domain/interfaces/notification-provider.interface';
-import { NOTIFICATION_PROVIDER_INTERFACE } from 'src/notifications/domain/interfaces/service.token';
+import {
+  NOTIFICATION_PROVIDER_INTERFACE,
+  NOTIFICATION_REPOSITORY_INTERFACE,
+} from 'src/notifications/domain/interfaces/service.token';
 import { NOTIFICATION_QUEUE } from 'src/notifications/notification.constant';
 import { NotificationJobDto } from './dtos/notification-job.dto';
+import { INotificationRepository } from 'src/notifications/domain/interfaces/notification-repository.interface';
 
 @Injectable()
 @Processor(NOTIFICATION_QUEUE)
@@ -14,6 +18,9 @@ export class NotificationProcessor extends WorkerHost {
   constructor(
     @Inject(NOTIFICATION_PROVIDER_INTERFACE)
     private readonly provider: INotificationProvider,
+
+    @Inject(NOTIFICATION_REPOSITORY_INTERFACE)
+    private readonly repository: INotificationRepository,
   ) {
     super();
   }
@@ -26,6 +33,11 @@ export class NotificationProcessor extends WorkerHost {
       );
 
       await this.provider.send(recipientToken, message);
+      const notification = await this.repository.findById(notificationId);
+      if (notification) {
+        notification.markAsSent();
+        await this.repository.save(notification);
+      }
 
       this.logger.log(`Notification ${notificationId} successfully delivered.`);
     } catch (err) {

@@ -33,6 +33,10 @@ describe('NotificationProcessor', () => {
     processor = module.get<NotificationProcessor>(NotificationProcessor);
   });
 
+  afterAll(() => {
+    jest.clearAllMocks();
+  });
+
   it('should send notification via FCM', async () => {
     const mockNotification = { id: 'abc', markAsSent: jest.fn() };
     mockRepository.findById.mockResolvedValue(mockNotification);
@@ -58,6 +62,8 @@ describe('NotificationProcessor', () => {
 
   it('should throw an error if provider failed', async () => {
     mockProvider.send.mockRejectedValue(new Error('Firebase Down'));
+    const mockNotification = { id: 'abc', markAsFailed: jest.fn() };
+    mockRepository.findById.mockResolvedValue(mockNotification);
 
     const mockJob = {
       name: 'send-notification',
@@ -73,5 +79,8 @@ describe('NotificationProcessor', () => {
       'user-123',
       'this is integration testing for BullMQ Consumer',
     );
+    expect(mockRepository.findById).toHaveBeenCalledWith(mockNotification.id);
+    expect(mockNotification.markAsFailed).toHaveBeenCalled();
+    expect(mockRepository.save).toHaveBeenCalledWith(mockNotification);
   });
 });

@@ -8,13 +8,16 @@ import { randomUUID } from 'crypto';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { NOTIFICATION_QUEUE } from 'src/notifications/notification.constant';
+import { NotificationJobDto } from 'src/notifications/infrastructure/processors/dtos/notification-job.dto';
 
 @CommandHandler(SendNotificationCommand)
 export class SendNotificationHandler implements ICommandHandler<SendNotificationCommand> {
   private readonly logger = new Logger(SendNotificationHandler.name);
 
   constructor(
-    @InjectQueue(NOTIFICATION_QUEUE) private readonly queue: Queue,
+    @InjectQueue(NOTIFICATION_QUEUE)
+    private readonly queue: Queue<NotificationJobDto>,
+
     @Inject(NOTIFICATION_REPOSITORY_INTERFACE)
     private readonly repository: INotificationRepository,
   ) {}

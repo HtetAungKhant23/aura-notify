@@ -13,7 +13,7 @@ describe('SendNotificationHandler', () => {
 
   beforeEach(async () => {
     mockRepository = { save: jest.fn().mockResolvedValue(undefined) };
-    mockQueue = { add: jest.fn().mockResolvedValue({ id: 'job-id' }) };
+    mockQueue = { add: jest.fn().mockResolvedValue(undefined) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [

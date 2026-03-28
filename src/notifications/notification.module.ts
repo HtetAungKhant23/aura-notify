@@ -22,6 +22,14 @@ import { NotificationProcessor } from './infrastructure/processors/notification.
       defaultJobOptions: {
         attempts: 3,
         backoff: { type: 'exponential', delay: 1000 },
+        removeOnComplete: {
+          age: 3600,
+          count: 100,
+        },
+        removeOnFail: {
+          age: 24 * 3600 * 5,
+          count: 5000,
+        },
       },
     }),
     TypeOrmModule.forFeature([NotificationSchema]),

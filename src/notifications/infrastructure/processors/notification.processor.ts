@@ -1,4 +1,4 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { INotificationProvider } from 'src/notifications/domain/interfaces/notification-provider.interface';
@@ -28,13 +28,13 @@ export class NotificationProcessor extends WorkerHost {
   async process(job: Job<NotificationJobDto>): Promise<void> {
     const { notificationId, recipientToken, message } = job.data;
 
-    const notification = await this.repository.findById(notificationId);
     try {
       this.logger.log(
         `Processing job ${job.id} for notification ${notificationId}`,
       );
 
       await this.provider.send(recipientToken, message);
+      const notification = await this.repository.findById(notificationId);
       if (notification) {
         notification.markAsSent();
         await this.repository.save(notification);
@@ -43,11 +43,24 @@ export class NotificationProcessor extends WorkerHost {
       this.logger.log(`Notification ${notificationId} successfully delivered.`);
     } catch (err) {
       this.logger.error(err);
+      throw err;
+    }
+  }
+
+  @OnWorkerEvent('failed')
+  async onJobFailed(job: Job<NotificationJobDto>, error: Error) {
+    if (job.attemptsMade >= job.opts.attempts) {
+      const notification = await this.repository.findById(
+        job.data.notificationId,
+      );
       if (notification) {
         notification.markAsFailed();
         await this.repository.save(notification);
+        this.logger.log(
+          `save markAsFailed status to database for failed send-notification job ${job.id}`,
+        );
       }
-      throw err;
+      this.logger.error(`Failed send-notification job Error: ${error.message}`);
     }
   }
 }

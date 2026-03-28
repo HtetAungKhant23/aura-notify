@@ -15,4 +15,11 @@ export class TypeOrmNotificationRepository implements INotificationRepository {
   async save(notification: Notification): Promise<void> {
     await this.repository.save(notification);
   }
+
+  async findById(notificationId: string): Promise<Notification | null> {
+    const notification = await this.repository.findOne({
+      where: { id: notificationId },
+    });
+    return notification ?? null;
+  }
 }

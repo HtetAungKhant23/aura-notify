@@ -48,4 +48,8 @@ describe('TypeOrmNotificationRepository', () => {
     expect(saveData.content).toBe(notification.content);
     expect(saveData.status).toBe(notification.status);
   });
+
+  it('should return null', async () => {
+    await expect(repository.findById('abc')).resolves.toBeNull();
+  });
 });

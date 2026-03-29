@@ -14,7 +14,12 @@ import { NotificationFailedEvent } from 'src/notifications/domain/events/notific
 import { IAlertService } from 'src/notifications/domain/interfaces/alert-service.interface';
 
 @Injectable()
-@Processor(NOTIFICATION_QUEUE)
+@Processor(NOTIFICATION_QUEUE, {
+  limiter: {
+    max: 10,
+    duration: 1000,
+  },
+})
 export class NotificationProcessor extends WorkerHost {
   private readonly logger = new Logger(NotificationProcessor.name);
 

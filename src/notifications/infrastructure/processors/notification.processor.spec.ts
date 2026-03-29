@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Job } from 'bullmq';
-import { NOTIFICATION_PROVIDER_INTERFACE } from 'src/notifications/domain/interfaces/service.token';
+import {
+  ALERT_SERVICE_INTERFACE,
+  NOTIFICATION_PROVIDER_INTERFACE,
+} from 'src/notifications/domain/interfaces/service.token';
 import { NotificationProcessor } from './notification.processor';
 import { NotificationJobDto } from './dtos/notification-job.dto';
 import { EventBus } from '@nestjs/cqrs';
@@ -10,16 +13,19 @@ describe('NotificationProcessor', () => {
   let processor: NotificationProcessor;
   let mockProvider: any;
   let mockEventBus: any;
+  let mockAlertService: any;
 
   beforeEach(async () => {
     mockProvider = { send: jest.fn().mockResolvedValue(undefined) };
     mockEventBus = { publish: jest.fn() };
+    mockAlertService = { sendAlert: jest.fn().mockResolvedValue(undefined) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         NotificationProcessor,
         { provide: NOTIFICATION_PROVIDER_INTERFACE, useValue: mockProvider },
         { provide: EventBus, useValue: mockEventBus },
+        { provide: ALERT_SERVICE_INTERFACE, useValue: mockAlertService },
       ],
     }).compile();
 

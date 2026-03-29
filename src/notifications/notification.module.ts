@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import {
+  ALERT_SERVICE_INTERFACE,
   NOTIFICATION_PROVIDER_INTERFACE,
   NOTIFICATION_REPOSITORY_INTERFACE,
 } from './domain/interfaces/service.token';
@@ -15,6 +16,7 @@ import { NOTIFICATION_QUEUE } from './notification.constant';
 import { NotificationProcessor } from './infrastructure/processors/notification.processor';
 import { NotificationSentEventHandler } from './applications/events/notification-sent-event.handler';
 import { NotificationFailedEventHandler } from './applications/events/notification-failed.event.handler';
+import { TelegramService } from './infrastructure/services/telegram.service';
 
 @Module({
   imports: [
@@ -42,6 +44,7 @@ import { NotificationFailedEventHandler } from './applications/events/notificati
     NotificationProcessor,
     NotificationSentEventHandler,
     NotificationFailedEventHandler,
+    { provide: ALERT_SERVICE_INTERFACE, useClass: TelegramService },
     {
       provide: NOTIFICATION_REPOSITORY_INTERFACE,
       useClass: TypeOrmNotificationRepository,

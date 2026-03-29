@@ -20,7 +20,8 @@ This project transcends standard "CRUD" applications by implementing a multi-lay
 The following diagram illustrates the asynchronous, event-driven lifecycle of a notification, from the initial API request to the final database update and background delivery.
 
 ```mermaid
-title Sequence Diagram
+sequenceDiagram
+    title Notification System Flow
     participant Client
     participant CommandBus
     participant EventBus

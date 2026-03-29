@@ -10,7 +10,7 @@ This project transcends standard "CRUD" applications by implementing a multi-lay
 
 ### 1. Layered Architecture (DDD)
 
-- **Domain Layer (`src/notifications/domain`)**: The "Heart" of the system. Contains pure business logic, entities (`Notification`), and abstract interfaces (`INotificationRepository`). It has **zero** dependencies on external frameworks or databases.
+- **Domain Layer (`src/notifications/domain`)**: The "Heart" of the system. Contains pure business logic, entities (`Notification`), and abstract interfaces (`INotificationRepository`, `INotificationProvider`, `IAlertService`). It has **zero** dependencies on external frameworks or databases.
 - **Application Layer (`src/notifications/applications`)**: Orchestrates use cases via **CQRS (Command Query Responsibility Segregation)**. Commands like `SendNotificationCommand` and Events like `NotificationSentEvent`,`NotificationFailedEvent` are handled here, ensuring high-level policy is separated from implementation details.
 - **Infrastructure Layer (`src/notifications/infrastructure`)**: Technical implementations. This is where TypeORM, BullMQ, and FCM (Firebase Cloud Messaging) reside. They are "plugs" that satisfy the domain's needs.
 - **Interface Layer (`src/notifications/interfaces`)**: The API surface area, containing Controllers and DTOs with strict validation via `class-validator`.
@@ -45,6 +45,7 @@ sequenceDiagram
         EventBus->>FailedEventHandler: handle(event)
         FailedEventHandler->>DB: findById(id)
         FailedEventHandler->>DB: save(notification, status=failed)
+        Worker->>Alert: sendAlert(Telegram Message)
     end
 ```
 
@@ -52,6 +53,7 @@ sequenceDiagram
 
 - **Async Processing**: Leverages **BullMQ** (Redis-backed) for reliable job queuing.
 - **Retry Mechanism**: Implements exponential backoff for failed notification attempts.
+- **Critical Alerting**: Integrated with a Telegram-based alerting system (`IAlertService`) that triggers on permanent job failures, ensuring zero "silent" errors in production.
 
 ---
 
@@ -104,6 +106,7 @@ cp .env.example .env
 - `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME`: PostgreSQL connection details.
 - `REDIS_HOST`, `REDIS_PORT`: Redis connection details for BullMQ.
 - `FIREBASE_SERVICE_ACCOUNT_JSON`: The full JSON string of your Firebase service account for FCM.
+- `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`: Telegram credentials for alerting.
 
 ### Running the App
 
